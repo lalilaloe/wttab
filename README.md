@@ -1,4 +1,4 @@
-# wttab
+# wttab - Programmatically open Tindows Terminal tab or window
 
 ## Install
 
@@ -38,6 +38,9 @@ Always welcome, if you are planning on adding/changing code please open an issue
 ## Sources & Inspiration
 
 Recent feature of executing commands in an existing Terminal Window [microsoft/terminal/issues/4472](https://github.com/microsoft/terminal/issues/4472)
+
 Commands taken from [Official Windows Terminal docs](https://docs.microsoft.com/nl-nl/windows/terminal/command-line-arguments?tabs=linux)
+
 Inspiration taken from [ttab (Linux)](https://www.npmjs.com/package/ttab)
+
 Ttab has no plans to add support for [other platforms](https://github.com/mklement0/ttab/issues/11)
