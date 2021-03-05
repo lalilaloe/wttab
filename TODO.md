@@ -1,0 +1,3 @@
+- Implement multiple commands/tabs, ex. wttab cmd, cmd2
+- Implement split-panes
+- Implement directory
