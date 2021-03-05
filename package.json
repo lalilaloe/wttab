@@ -15,5 +15,14 @@
   "dependencies": {
     "commander": "^7.1.0",
     "strip-json-comments": "^3.1.1"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lalilaloe/wttab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lalilaloe/wttab/issues"
+  },
+  "homepage": "https://github.com/lalilaloe/wttab#readme"
 }
