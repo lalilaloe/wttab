@@ -1,11 +1,11 @@
 {
   "name": "wttab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Programmatically open Tindows Terminal tab or window",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "wttab": "./index.js"
+    "wttab": "index.js"
   },
   "scripts": {
     "test": "npm i -g . && wttab"
