@@ -41,6 +41,7 @@ function wtArguments(options) {
     wtArgs.push(`-p "${getProfileByOption(options.profile).name}"`);
   if (options.dir) wtArgs.push(`-d ${options.dir}`);
   if (options.color) wtArgs.push(`--tabColor "${options.color}"`);
+  if (options.d) wtArgs.push(`-d "${options.d}"`);
   return wtArgs.join(" ");
 }
 
@@ -143,6 +144,11 @@ program
   .option("-s, --settings <settings>", "Assign a settings set (profile).")
   .option("-t, --title <title>", "Specify title for new tab.")
   .option("-q", "Clear the new tab's screen.")
+  .option(
+    "-d <dir>",
+    "Specify working directory; -d '' disables inheriting the current dir.",
+    process.cwd()
+  )
   // Windows Terminal specific options
   .option(
     "--preview",
