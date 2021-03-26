@@ -1,4 +1,4 @@
-# wttab - Programmatically open Tindows Terminal tab or window
+# wttab - Programmatically open Windows Terminal tab or window
 
 ## Install
 
