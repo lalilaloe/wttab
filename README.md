@@ -41,6 +41,6 @@ Recent feature of executing commands in an existing Terminal Window [microsoft/t
 
 Commands taken from [Official Windows Terminal docs](https://docs.microsoft.com/nl-nl/windows/terminal/command-line-arguments?tabs=linux)
 
-Inspiration taken from [ttab (Linux)](https://www.npmjs.com/package/ttab)
+Inspiration taken from [ttab (macOS/Linux)](https://www.npmjs.com/package/ttab)
 
 Ttab has no plans to add support for [other platforms](https://github.com/mklement0/ttab/issues/11)
