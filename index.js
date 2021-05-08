@@ -2,7 +2,8 @@
 import { execSync, exec } from "child_process";
 import fs from "fs";
 import stripJsonComments from "strip-json-comments";
-import { Command } from "commander";
+import commander from "commander";
+const { Command } = commander;
 
 var isWin = process.platform === "win32";
 
@@ -62,9 +63,7 @@ function execute(command, options) {
       // Do not use this trick on user request
       command = `cmd /k "${command}"`;
     } else {
-      command = `cmd /k "ECHO=${command}|cmd && ${
-        clearAfter(options) ? "cls" : "cmd>nul"
-      };"`;
+      command = `cmd /k "ECHO=${command}|cmd && ${clearAfter(options) ? "cls" : "cmd>nul"};"`;
     }
   }
   if (options.profile === "powershell") {
@@ -74,9 +73,7 @@ function execute(command, options) {
       // Do not use this trick on user request
       command = `powershell -noexit "${command}"`;
     } else {
-      command = `powershell -noexit "Write-Output ${command}|powershell -noexit\\;${
-        clearAfter(options) ? "clear" : "powershell | out-null"
-      } "`;
+      command = `powershell -noexit "Write-Output '${command}'|powershell -noexit\\;${clearAfter(options) ? "clear" : "powershell | out-null"} "`;
     }
   }
   if (options.profile === "wsl") {
@@ -84,9 +81,7 @@ function execute(command, options) {
     if (options.q === "before") {
       command = `bash -c "cd ${options.d} && ${command} && exec bash 2>&1"`;
     } else {
-      command = `bash -c "cd ${options.d} && echo ${command} && ${command}\\;${
-        clearAfter(options) ? "clear\\;" : ""
-      } exec bash 2>&1"`;
+      command = `bash -c "cd ${options.d} && echo ${command} && ${command}\\;${clearAfter(options) ? "clear\\;" : ""} exec bash 2>&1"`;
     }
 
     options.d = undefined; // Unset directory because we use cd <dir...>
