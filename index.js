@@ -63,7 +63,7 @@ function execute(command, options) {
       // Do not use this trick on user request
       command = `cmd /k "${command}"`;
     } else {
-      command = `cmd /k "ECHO=${command}|cmd && ${clearAfter(options) ? "cls" : "cmd>nul"};"`;
+      command = `cmd /k "ECHO=${command}|cmd && ${clearAfter(options) ? "cls" : "cmd>nul"}"`;
     }
   }
   if (options.profile === "powershell") {
@@ -192,8 +192,8 @@ program
     `Choose a profile to launch 
                            Available profiles:
                             - ${availableProfiles().join(
-                              "\n                            - "
-                            )}`
+      "\n                            - "
+    )}`
   )
   .option("--color <#hexcode>", "set color of tab")
   // First versions specific
