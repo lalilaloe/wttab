@@ -164,7 +164,7 @@ const program = new Command();
 program
   .description("Opens a new terminal tab or window on Windows Terminal, from WSL or Windows.")
   .arguments("[cmd...]")
-  .option("-w, --window [window-id]", "Open new tab in new terminal window (window-id only available with preview)", -1)
+  .option("-w, --window [window-id]", "Open new tab in new terminal window (window-id only available with preview)")
   .option("-s, --settings <settings>", "Assign a settings set (profile).")
   .option("-t, --title <title>", "Specify title for new tab.")
   .option("-q [before]", "Clear the new tab's screen. default (after)")
