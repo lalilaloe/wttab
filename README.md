@@ -18,8 +18,8 @@ Usage: wttab [options] [cmd...]
 Opens a new terminal tab or window on Windows Terminal, from WSL or Windows.
 
 Options:
-  -w, --window               Open new tab in new terminal window (default for current
-                             version of Windows Terminal)
+  -w, --window [window-id]   Open new tab in new terminal window
+                             (window-id only available with preview)
   -s, --settings <settings>  Assign a settings set (profile).
   -t, --title <title>        Specify title for new tab.
   -q                         Clear the new tab's screen.
