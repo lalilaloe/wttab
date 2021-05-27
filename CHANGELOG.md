@@ -4,6 +4,13 @@
 
 ### Added
 
+- Open terminal in new window or target a window with preview version of Windows Terminal
+- Opens new commands in existing window by default
+
+## [1.1.0] - 03-05-2021
+
+### Added
+
 - This changelog 🤗
 
 ### Fixed

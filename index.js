@@ -25,12 +25,18 @@ function error(error, stdout, stderr) {
 }
 
 function wt(options) {
-  let cmd = '"wt.exe" ';
+  let cmd = '"wt.exe"';
   if (options.preview) {
     // Use Windows Terminal Preview's wt.exe for launch
     let userProfile = execSync(`cmd.exe /c "echo %UserProfile%"`);
     userProfile = userProfile.toString().trim().decapitalize();
-    cmd = `\"${userProfile}\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\\wt.exe\" -w 0 `; // Focus on existing window with -w 0
+    cmd = `\"${userProfile}\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\\wt.exe\"`; // Focus on existing window with -w 0
+  }
+  if (options.window) {
+    cmd += ` -w ${options.preview ? options.window : "-1"} `;
+  } else {
+    // Default open tab in existing Windows Terminal window
+    cmd += ` -w 0 `;
   }
   return cmd;
 }
@@ -38,8 +44,7 @@ function wt(options) {
 function wtArguments(options) {
   let wtArgs = [];
   if (options.title) wtArgs.push(`--title "${options.title}"`);
-  if (options.profile)
-    wtArgs.push(`-p "${getProfileByOption(options.profile).name}"`);
+  if (options.profile) wtArgs.push(`-p "${getProfileByOption(options.profile).name}"`);
   if (options.color) wtArgs.push(`--tabColor "${options.color}"`);
   if (options.d) wtArgs.push(`-d "${options.d}"`);
   return wtArgs.join(" ");
@@ -106,9 +111,7 @@ function execute(command, options) {
       options.d = wslPathPrefix.trim() + options.d.replace(/\//g, "\\");
     }
 
-    fullCommand = `cmd.exe /c ${wt(options)} ${wtArguments(
-      options
-    )} ${command}`; // Launch from unix
+    fullCommand = `cmd.exe /c ${wt(options)} ${wtArguments(options)} ${command}`; // Launch from unix
   }
   if (options.debug) console.debug("DEBUG: Executing command:\n", fullCommand);
   exec(fullCommand, error);
@@ -116,8 +119,7 @@ function execute(command, options) {
 
 function wtSettings() {
   let wtSettingsObject, wtSettingsFullPath;
-  let wtSettingsPath =
-    "/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json";
+  let wtSettingsPath = "/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json";
   let localAppData = execSync(`cmd.exe /c "echo %LocalAppData%"`);
   localAppData = localAppData.toString().trim().decapitalize();
   if (isWin) {
@@ -128,9 +130,7 @@ function wtSettings() {
   }
 
   try {
-    wtSettingsObject = JSON.parse(
-      stripJsonComments(fs.readFileSync(wtSettingsFullPath, "utf8"))
-    );
+    wtSettingsObject = JSON.parse(stripJsonComments(fs.readFileSync(wtSettingsFullPath, "utf8")));
   } catch (err) {
     throw Error("Could not read Windows Terminal settings.json", err);
   }
@@ -147,15 +147,11 @@ function getProfileCommand(profile) {
 }
 
 function availableProfiles() {
-  return settings.profiles.list.map(
-    (p) => `${p.name} (${getProfileCommand(p)})`
-  );
+  return settings.profiles.list.map((p) => `${p.name} (${getProfileCommand(p)})`);
 }
 
 function getProfileByOption(profileCommand) {
-  return settings.profiles.list.find(
-    (p) => getProfileCommand(p) === profileCommand
-  );
+  return settings.profiles.list.find((p) => getProfileCommand(p) === profileCommand);
 }
 
 function getDefaultProfile() {
@@ -166,34 +162,20 @@ const settings = wtSettings();
 
 const program = new Command();
 program
-  .description(
-    "Opens a new terminal tab or window on Windows Terminal, from WSL or Windows."
-  )
+  .description("Opens a new terminal tab or window on Windows Terminal, from WSL or Windows.")
   .arguments("[cmd...]")
-  .option(
-    "-w, --window",
-    "Open new tab in new terminal window (default for current version of Windows Terminal)"
-  )
+  .option("-w, --window [window-id]", "Open new tab in new terminal window (window-id only available with preview)", -1)
   .option("-s, --settings <settings>", "Assign a settings set (profile).")
   .option("-t, --title <title>", "Specify title for new tab.")
   .option("-q [before]", "Clear the new tab's screen. default (after)")
-  .option(
-    "-d <dir>",
-    "Specify working directory; -d '' disables inheriting the current dir.",
-    process.cwd()
-  )
+  .option("-d <dir>", "Specify working directory; -d '' disables inheriting the current dir.", process.cwd())
   // Windows Terminal specific options
-  .option(
-    "--preview",
-    "Use the preview version of Windows Terminal (allows using a existing terminal since v1.7.572.0)"
-  )
+  .option("--preview", "Use the preview version of Windows Terminal (allows using a existing terminal since v1.7.572.0)")
   .option(
     "-p, --profile [terminal]",
     `Choose a profile to launch 
                            Available profiles:
-                            - ${availableProfiles().join(
-      "\n                            - "
-    )}`
+                            - ${availableProfiles().join("\n                            - ")}`
   )
   .option("--color <#hexcode>", "set color of tab")
   // First versions specific
@@ -203,8 +185,7 @@ program
       console.log(`Available profiles:
       - ${availableProfiles().join("\n      - ")}`);
     } else if (process.argv.slice(2).length) {
-      if (!options.profile)
-        options.profile = getProfileCommand(getDefaultProfile());
+      if (!options.profile) options.profile = getProfileCommand(getDefaultProfile());
       execute(cmd, options);
     } else {
       program.help();
