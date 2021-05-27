@@ -1,8 +1,9 @@
 {
   "name": "wttab",
   "version": "1.2.2",
-  "description": "Programmatically open Tindows Terminal tab or window",
+  "description": "Windows Terminal CLI to open a tab or window",
   "main": "index.js",
+  "preferGlobal": true,
   "type": "module",
   "bin": {
     "wttab": "index.js"
@@ -24,5 +25,20 @@
   "bugs": {
     "url": "https://github.com/lalilaloe/wttab/issues"
   },
-  "homepage": "https://github.com/lalilaloe/wttab#readme"
+  "homepage": "https://github.com/lalilaloe/wttab#readme",
+  "keywords": [
+    "powershell",
+    "cmd",
+    "windows",
+    "wsl",
+    "terminal",
+    "preview",
+    "cli",
+    "tabs",
+    "windows",
+    "automate",
+    "ubuntu",
+    "window",
+    "color"
+  ]
 }
