@@ -141,8 +141,12 @@ function wtSettings() {
 function getProfileCommand(profile) {
   if (profile.commandline) {
     return profile.commandline.split(".").shift().decapitalize();
-  } else {
+  } else if (profile.source) {
     return profile.source.split(".").pop().decapitalize();
+  } else if (profile.name === "Windows PowerShell") {
+    return "powershell.exe"
+  } else if (profile.name === "Command Prompt") {
+    return "cmd.exe"
   }
 }
 
@@ -182,7 +186,7 @@ program
   .option("--debug", "Enable debugging, outputs the command executed")
   .action((cmd, options, command) => {
     if (options.profile && typeof options.profile !== "string") {
-      console.log(`Available profiles:
+      console.log(`Available profiles1:
       - ${availableProfiles().join("\n      - ")}`);
     } else if (process.argv.slice(2).length) {
       if (!options.profile) options.profile = getProfileCommand(getDefaultProfile());
