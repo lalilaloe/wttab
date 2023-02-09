@@ -82,6 +82,15 @@ function execute(command, options) {
     }
   }
   if (options.profile === "wsl") {
+    if (options.d.match(/[:\\]/)) {
+      // Change windows dir to wsl friendly
+      const diskLetter = options.d
+        .match(/[^\.:]*/)
+        .shift()
+        .toLowerCase();
+      options.d = options.d.replace(/[^\.\\]*/, `/mnt/${diskLetter}`);
+      options.d = options.d.replace(/\\/g, "/");
+    }
     // Use an equevalant trick for wsl bash to keep command visible
     if (options.q === "before") {
       command = `bash -c "cd ${options.d} && ${command} && exec bash 2>&1"`;

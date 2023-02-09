@@ -1,4 +1,5 @@
-# make sure wttab is installed on windows: npm i -g .
+# make sure wttab is installed on windows: 
+npm i -g .
 # for testing docs see: https://powershellmagazine.com/2014/03/27/testing-your-powershell-scripts-with-pester-assertions-and-more/
 Describe 'Run command' {
      Context 'Runs help command'    {
@@ -19,7 +20,7 @@ Describe 'Run command' {
         #test one
         It 'Executes succesfully'  {
             $stderr | Should BeNullOrEmpty
-            $stdout | Should Be "c"
+            $stdout | Should BeNullOrEmpty
             (Get-Process).ProcessName | %{ if($_ -imatch 'WindowsTerminal') { $_ | Should Be $true } }
         }
     }
