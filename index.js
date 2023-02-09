@@ -190,6 +190,7 @@ program
       - ${availableProfiles().join("\n      - ")}`);
     } else if (process.argv.slice(2).length) {
       if (!options.profile) options.profile = getProfileCommand(getDefaultProfile());
+      if(Array.isArray(cmd)) cmd = cmd.join(" ")
       execute(cmd, options);
     } else {
       program.help();
