@@ -9,7 +9,9 @@
     "wttab": "index.js"
   },
   "scripts": {
-    "test": "npm i -g . && wttab"
+    "test:help": "npm i -g . && wttab",
+    "test": "powershell.exe -c ./index.spec.ps1",
+    "script": "echo \"output\""
   },
   "author": "",
   "license": "ISC",
