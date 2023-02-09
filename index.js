@@ -2,8 +2,7 @@
 import { execSync, exec } from "child_process";
 import fs from "fs";
 import stripJsonComments from "strip-json-comments";
-import commander from "commander";
-const { Command } = commander;
+import { Command } from "commander";
 
 var isWin = process.platform === "win32";
 
