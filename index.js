@@ -152,9 +152,9 @@ function getProfileCommand(profile) {
   } else if (profile.source) {
     return profile.source.split(".").pop().decapitalize();
   } else if (profile.name === "Windows PowerShell") {
-    return "powershell.exe"
+    return "powershell"
   } else if (profile.name === "Command Prompt") {
-    return "cmd.exe"
+    return "cmd"
   }
 }
 
