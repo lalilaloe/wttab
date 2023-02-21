@@ -18,17 +18,48 @@ Usage: wttab [options] [cmd...]
 Opens a new terminal tab or window on Windows Terminal, from WSL or Windows.
 
 Options:
-  -w, --window [window-id]   Open new tab in new terminal window
-                             (window-id only available with preview)
+  -w, --window [window-id]   Target new tab in new terminal window, use 0 for same window (default -1, same window)
   -s, --settings <settings>  Assign a settings set (profile).
   -t, --title <title>        Specify title for new tab.
   -q                         Clear the new tab's screen.
-  --preview                  Use the preview version of Windows Terminal (allows using a
-                             existing terminal since v1.7.572.0)
+  --preview                  Target the preview version of Windows Terminal
   -p, --profile [terminal]   Choose a profile to launch
   --color <#hexcode>         set color of tab
   --debug                    Enable debugging, outputs the command executed
   -h, --help                 display help for command
+```
+
+Examples
+```bash
+# Open a new tab in an existing or new terminal window.
+wttab echo test
+
+# Open a new tab in a new terminal window.
+wttab -w 0 echo test
+
+# Open a new tab and execute the specified command before showing the prompt.
+wttab ls -l "$HOME/Library/Application Support"
+```
+
+### Powershell limitations
+
+Unfortunately, PowerShell also uses ; as a command separator. To work around this, you can use the following (`\`;` or `--%`) to run multiple commands (source)[https://learn.microsoft.com/nl-nl/windows/terminal/command-line-arguments?tabs=linux#examples-of-multiple-commands-from-powershell]
+```powershell
+wttab --color '#009999,f59218' dir`; echo test
+wttab --% --color '#009999,f59218' dir; echo test
+```
+
+In PowerShell, you need to enclose arguments that contain spaces or other special characters in double quotes. This is because PowerShell treats space as a command separator by default (source)[https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.3]. So instead of `wttab -t 'window title' npm run script` run:
+
+```powershell
+wttab -t "window title" npm run script
+```
+
+### Advanced
+
+```bash
+# Open a new tab in a targeted terminal window.
+wttab -w foo echo test
 ```
 
 ## Contributing

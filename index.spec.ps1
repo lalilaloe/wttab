@@ -2,6 +2,11 @@
 npm i -g .
 # for testing docs see: https://powershellmagazine.com/2014/03/27/testing-your-powershell-scripts-with-pester-assertions-and-more/
 
+#TODO:
+Fix powershell and cmd wttab -t 'test case' npm run script`; split-pane echo test --debug
+wttab --color \#009999,f59218 echo test1`; echo test2 --debug
+/bin/bash: -c: line 0: unexpected EOF while looking for matching ``' '
+
 function Execute { 
     Param (
          [Parameter(Mandatory=$true, Position=0)]
@@ -16,7 +21,7 @@ function Execute {
         $output = & cmd.exe /c $Command 2>&1
     } else {
         $output = & powershell.exe -c $Command 2>&1
-    }   
+    }
     $stderr = $output | ?{ $_ -is [System.Management.Automation.ErrorRecord] }
     $stdout = $output | ?{ $_ -isnot [System.Management.Automation.ErrorRecord] }
 
@@ -26,7 +31,7 @@ function Execute {
     })
 }
 
-Describe 'Powershell' {
+Describe 'Powershell (powershell.exe -c)' {
      Context 'Runs help command'    {
         $output = Execute "wttab"
         
@@ -37,7 +42,18 @@ Describe 'Powershell' {
     }
 
     Context 'Runs single command'    {
-        $output = Execute "wttab -t 'test case' npm run script"
+        $output = Execute "wttab -t 'test` case' npm run script" 
+        # TODO: Figure out why ` escaping space is needed here and `"test case`" does not work for powershell and wsl, but is needed for cmd
+
+        It 'Executes succesfully'  {
+            $output."stderr" | Should BeNullOrEmpty
+            $output."stdout" | Should BeNullOrEmpty
+            (Get-Process).ProcessName | %{ if($_ -imatch 'WindowsTerminal') { $_ | Should Be $true } }
+        }
+    }
+
+    Context 'Runs Multitple command'    {
+        $output = Execute "wttab --color \#009999,f59218 echo test1`; echo test2 --debug" 
 
         It 'Executes succesfully'  {
             $output."stderr" | Should BeNullOrEmpty
@@ -47,7 +63,7 @@ Describe 'Powershell' {
     }
 }
 
-Describe 'Cmd' {
+Describe 'Command Prompt (cmd.exe /c)' {
      Context 'Runs help command'    {
         $output = Execute "wttab" "cmd"
         
@@ -58,7 +74,7 @@ Describe 'Cmd' {
     }
 
     Context 'Runs single command'    {
-        $output = Execute "wttab -t 'test case' npm run script" "cmd"
+        $output = Execute "wttab -t `"test case`" npm run script" "cmd"
 
         It 'Executes succesfully'  {
             $output."stderr" | Should BeNullOrEmpty
@@ -68,7 +84,7 @@ Describe 'Cmd' {
     }
 }
 
-Describe 'Wsl' {
+Describe 'WSL (wsl.exe bash -c)' {
      Context 'Runs help command'    {
         $output = Execute "wttab" "wsl"
         

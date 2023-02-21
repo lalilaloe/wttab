@@ -1,169 +1,19 @@
 #!/usr/bin/env node
-import { execSync, exec } from "child_process";
-import fs from "fs";
-import stripJsonComments from "strip-json-comments";
 import { Command } from "commander";
-
-var isWin = process.platform === "win32";
+import { execute } from "./execution.js"
+import { processCommands, splitCommands, isMultiCommand } from "./commands.js"
+import { wtSettings, getProfileCommand } from "./windowsTerminal.js"
 
 String.prototype.decapitalize = function () {
   return this.charAt(0).toLowerCase() + this.slice(1);
 };
 
-function error(error, stdout, stderr) {
-  if (error) {
-    console.log(`error: ${error.message}`);
-    return;
-  } else if (stderr) {
-    console.log(`stderr: ${stderr}`);
-    return;
-  } else if (stdout) {
-    console.log(`stdout: ${stdout}`);
-    return;
-  }
-}
-
-function wt(options) {
-  let cmd = '"wt.exe"';
-  if (options.preview) {
-    // Use Windows Terminal Preview's wt.exe for launch
-    let userProfile = execSync(`cmd.exe /c "echo %UserProfile%"`);
-    userProfile = userProfile.toString().trim().decapitalize();
-    cmd = `\"${userProfile}\\AppData\\Local\\Microsoft\\WindowsApps\\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\\wt.exe\"`; // Focus on existing window with -w 0
-  }
-  if (options.window) {
-    cmd += ` -w ${options.preview ? options.window : "-1"} `;
-  } else {
-    // Default open tab in existing Windows Terminal window
-    cmd += ` -w 0 `;
-  }
-  return cmd;
-}
-
-function wtArguments(options) {
-  let wtArgs = [];
-  if (options.title) wtArgs.push(`--title "${options.title}"`);
-  if (options.profile) wtArgs.push(`-p "${getProfileByOption(options.profile).name}"`);
-  if (options.color) wtArgs.push(`--tabColor "${options.color}"`);
-  if (options.d) wtArgs.push(`-d "${options.d}"`);
-  return wtArgs.join(" ");
-}
-
-function clearAfter(options) {
-  return options.q && options.q !== "before";
-}
-
-function execute(command, options) {
-  let fullCommand;
-  if (options.q === "before") options.clear = "clear";
-  if (options.profile === "cmd") {
-    // Trick to continue using the terminal in Command Prompt and keep command visible
-    // 'cmd /k' - prevents autoclosing after running command
-    // 'ECHO=commmand|cmd' - echoes the command and executes it in the terminal,
-    //    right after executing/echoeing it runs cmd
-    // '&& cmd>nul' prevents output of last executed cmd command
-    //    on windows an empty line is supressed and on unix the default cmd greeting
-    if (options.q === "before") {
-      // Do not use this trick on user request
-      command = `cmd /k "${command}"`;
-    } else {
-      command = `cmd /k "ECHO=${command}|cmd && ${clearAfter(options) ? "cls" : "cmd>nul"}"`;
-    }
-  }
-  if (options.profile === "powershell") {
-    // The same trick is used for Powershell
-    // Where Write-Output === echo, -noexit === cmd /k, | out-null === >nul
-    if (options.q === "before") {
-      // Do not use this trick on user request
-      command = `powershell -noexit "${command}"`;
-    } else {
-      command = `powershell -noexit "Write-Output '${command}'|powershell -noexit\\;${clearAfter(options) ? "clear" : "powershell | out-null"} "`;
-    }
-  }
-  if (options.profile === "wsl") {
-    if (options.d.match(/[:\\]/)) {
-      // Change windows dir to wsl friendly
-      const diskLetter = options.d
-        .match(/[^\.:]*/)
-        .shift()
-        .toLowerCase();
-      options.d = options.d.replace(/[^\.\\]*/, `/mnt/${diskLetter}`);
-      options.d = options.d.replace(/\\/g, "/");
-    }
-    // Use an equevalant trick for wsl bash to keep command visible
-    if (options.q === "before") {
-      command = `bash -c "cd ${options.d} && ${command} && exec bash 2>&1"`;
-    } else {
-      command = `bash -c "cd ${options.d} && echo ${command} && ${command}\\;${clearAfter(options) ? "clear\\;" : ""} exec bash 2>&1"`;
-    }
-
-    options.d = undefined; // Unset directory because we use cd <dir...>
-  }
-  if (isWin) {
-    fullCommand = `${wt(options)} ${wtArguments(options)} ${command}`;
-  } else {
-    if (options.profile !== "wsl" && options.d.match(/^\/mnt\//)) {
-      // Redirect wsl disk mount it's Windows path
-      options.d = options.d.replace(/^\/mnt\//, "");
-      const diskLetter = options.d
-        .match(/[^\/]*/)
-        .shift()
-        .toUpperCase();
-      options.d = options.d.replace(/[^\/]*/, `${diskLetter}:`);
-    } else if (options.profile !== "wsl" && options.d.match(/^\//)) {
-      // Redirect to wsl path in windows
-      const currentWslDistroName = execSync(`wsl.exe -l -q --running`)
-        .toString()
-        .replace(/\r?\n|\r/g, "");
-      const wslPathPrefix = `\\\\wsl$\\${currentWslDistroName}`;
-      options.d = wslPathPrefix.trim() + options.d.replace(/\//g, "\\");
-    }
-
-    fullCommand = `cmd.exe /c ${wt(options)} ${wtArguments(options)} ${command}`; // Launch from unix
-  }
-  if (options.debug) console.debug("DEBUG: Executing command:\n", fullCommand);
-  exec(fullCommand, error);
-}
-
-function wtSettings() {
-  let wtSettingsObject, wtSettingsFullPath;
-  let wtSettingsPath = "/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json";
-  let localAppData = execSync(`cmd.exe /c "echo %LocalAppData%"`);
-  localAppData = localAppData.toString().trim().decapitalize();
-  if (isWin) {
-    wtSettingsFullPath = localAppData + wtSettingsPath;
-  } else {
-    localAppData = localAppData.replace(/\\/g, "/").replace(/:/g, ""); // Convert path to unix
-    wtSettingsFullPath = "/mnt/" + localAppData + wtSettingsPath;
-  }
-
-  try {
-    wtSettingsObject = JSON.parse(stripJsonComments(fs.readFileSync(wtSettingsFullPath, "utf8")));
-  } catch (err) {
-    throw Error("Could not read Windows Terminal settings.json", err);
-  }
-
-  return wtSettingsObject;
-}
-
-function getProfileCommand(profile) {
-  if (profile.commandline) {
-    return profile.commandline.split(".").shift().decapitalize();
-  } else if (profile.source) {
-    return profile.source.split(".").pop().decapitalize();
-  } else if (profile.name === "Windows PowerShell") {
-    return "powershell"
-  } else if (profile.name === "Command Prompt") {
-    return "cmd"
-  }
-}
-
 function availableProfiles() {
   return settings.profiles.list.map((p) => `${p.name} (${getProfileCommand(p)})`);
 }
 
-function getProfileByOption(profileCommand) {
-  return settings.profiles.list.find((p) => getProfileCommand(p) === profileCommand);
+function getProfileByOption(profile) {
+  return settings.profiles.list.find((p) => p.name === profile || getProfileCommand(p) === profile);
 }
 
 function getDefaultProfile() {
@@ -176,33 +26,56 @@ const program = new Command();
 program
   .description("Opens a new terminal tab or window on Windows Terminal, from WSL or Windows.")
   .arguments("[cmd...]")
-  .option("-w, --window [window-id]", "Open new tab in new terminal window (window-id only available with preview)")
+  .option("-w, --window <window-id>", "Target new tab in new terminal window, use 0 for same window", -1)
   .option("-s, --settings <settings>", "Assign a settings set (profile).")
   .option("-t, --title <title>", "Specify title for new tab.")
   .option("-q [before]", "Clear the new tab's screen. default (after)")
   .option("-d <dir>", "Specify working directory; -d '' disables inheriting the current dir.", process.cwd())
   // Windows Terminal specific options
-  .option("--preview", "Use the preview version of Windows Terminal (allows using a existing terminal since v1.7.572.0)")
+  .option("--preview", "Target the preview version of Windows Terminal")
   .option(
     "-p, --profile [terminal]",
     `Choose a profile to launch 
                            Available profiles:
                             - ${availableProfiles().join("\n                            - ")}`
   )
-  .option("--color <#hexcode>", "set color of tab")
-  // First versions specific
-  .option("--debug", "Enable debugging, outputs the command executed")
+  .option("--color <hexcode>", "set color of tab (use \# for hex or between '')")
+  // Debug executed wt command for issues
+  .option("--debug", "Enable debugging, outputs the wt command executed")
+  .allowUnknownOption('--%')
   .action((cmd, options, command) => {
+    // Check for the presence of a profile and display available profiles if necessary.
     if (options.profile && typeof options.profile !== "string") {
-      console.log(`Available profiles1:
-      - ${availableProfiles().join("\n      - ")}`);
-    } else if (process.argv.slice(2).length) {
-      if (!options.profile) options.profile = getProfileCommand(getDefaultProfile());
-      if(Array.isArray(cmd)) cmd = cmd.join(" ")
-      execute(cmd, options);
-    } else {
+      console.log(`Available profiles1:\n  - ${availableProfiles().join("\n  - ")}`);
+    }
+    // Otherwise, process the provided command(s) and options.
+    else if (process.argv.slice(2).length) {
+      // If a profile is specified, retrieve its name and command.
+      if (options.profile) options.profile = getProfileByOption(options.profile);
+      // If no profile is specified, use the default profile.
+      if (!options.profile) options.profile = getDefaultProfile();
+      // Determine the terminal executable to use based on the selected profile.
+      options.terminal = getProfileCommand(options.profile);
+      // Join the command arguments into a single string if necessary.
+      if (Array.isArray(cmd)) {
+        cmd = cmd.join(" ");
+      }
+      // If the command is a multi-command, split it into individual commands and process each one.
+      if (isMultiCommand(cmd)) {
+        const commands = splitCommands(cmd);
+        const processedCommands = processCommands(commands, options);
+        execute(processedCommands, options);
+      }
+      // Otherwise, process the command as a single command.
+      else {
+        execute(processCommands([cmd], options), options);
+      }
+    }
+    // If no arguments were provided, display the program's help message.
+    else {
       program.help();
     }
   });
+
 
 program.parse(process.argv);
